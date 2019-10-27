@@ -5,15 +5,15 @@ A model for predicting hot and cold data
 
 ### Signle Update
 
-![signle-update](images/signle-update.png)
+![signle-update](images/signle-update.jpg)
 
 ### Multiple Update
 
-![multiple-update](images/multiple-update.png)
+![multiple-update](images/multiple-update.jpg)
 
 ### Multiple Append Write
 
-![multiple-append-write](images/multiple-append-write.png)
+![multiple-append-write](images/multiple-append-write.bmp)
 
 ## Result
 

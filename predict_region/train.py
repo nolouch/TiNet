@@ -162,45 +162,25 @@ def train_lstm(data,input_size,output_size,lr,train_time,rnn_unit,weights,biases
 
         # 画图表示结果
         fig = plt.figure()
-        w1 = []
-        w2 = []
-        w3 = []
-        ax4 = fig.add_subplot(121, projection='3d')
-        ax4.set_xlabel('time/min')
-        ax4.set_ylabel('area')
-        ax4.set_zlabel('read or write/B')
-        # ax4.set_yticks([i for i in range(output_size)])
-        # ax4.set_yticklabels(['area0', 'area1', 'area2', 'area3', 'area4'])
-        # ax4.set_zticks([0, 50*1024*1024, 100*1024*1024, 150*1024*1024, 200*1024*1024, 250*1024*1024, 300*1024*1024])
-        # ax4.set_zticklabels(['0', '50', '100', '150', '200', '250', '300'])
-        y = [[] for i in range(output_size)]
-        z = [[] for i in range(output_size)]
+        ax1 = fig.add_subplot(121)
+        ax1.set_xlabel('time/min')
+        ax1.set_ylabel('area')
+        ax1.set_title('table1')
+        ax2 = fig.add_subplot(122)
+        ax2.set_xlabel('time/min')
+        ax2.set_ylabel('area')
+        ax2.set_title('table2')
         x = list(range(len(data)))
-        y[0] = np.zeros((len(data), 1))
-        y[1] = np.ones((len(data), 1))
-        Y = [[] for i in range(output_size)]
-        Z = [[] for i in range(output_size)]
         X = list(range(train_end, train_end + len(test_predict)))
-        Y[0] = np.zeros((len(test_predict), 1))
-        Y[1] = np.ones((len(test_predict), 1))
-        for i in range(2, output_size):
-            y[i] = np.multiply(y[1], [i])
-            Y[i] = np.multiply(Y[1], [i])
+        y = [[] for i in range(output_size)]
+        Y = [[] for i in range(output_size)]
         for i in range(output_size):
-            z[i] = data[:, i+1]
-            Z[i] = test_predict[:, i]
-        for i in range(output_size):
-            ax4.scatter(x, y[i], z[i], color='r', marker='o', s=3)
-            #ax4.scatter(X, Y[i], Z[i], color='b', marker='o', s=3)
-
-        ax1 = fig.add_subplot(122)
-        ax1.set_title('table')
-        #plt.ylim(0,1000000)
-        ax1.plot(x, z[1], color='r')
-        ax1.plot(X, Z[1], color='b')
-
-        # ax1.plot(list(range(train_end, train_end + len(test_predict))), test_predict[:, 2 * i], color='b',label='predict')
-        # ax1.plot(list(range(len(data))), data[:, 2 * i], color='r', label='real')
+            y[i] = data[:, i+1]
+            Y[i] = test_predict[:, i]
+        ax1.plot(x, y[0], color='r', label='real')
+        ax1.plot(X, Y[0], color='b', label='predict')
+        ax2.plot(x, y[1], color='r', label='real')
+        ax2.plot(X, Y[1], color='b', label='predict')
         plt.legend()
         plt.show()
 
@@ -208,16 +188,16 @@ if __name__=="__main__":
     input_size = 3  # 输入维度
     output_size = 2  # 输出维度
     rnn_unit = 12  # 隐藏层节点
-    train_end = 700  # 训练集截取到的位置140/190,320/386,4200/4537
     lr = 0.0004  # 学习率
-    train_time = 500  # 所有数据的训练轮次
     batch_size = 30  # 每次训练的一个批次的大小
     time_step = 20  # 前time_step步来预测下一步
     predict_step = 20 #预测predict_step分钟后的负载
     kp = 1  # dropout保留节点的比例
     smooth = 0  # 为1则在时间维度上平滑数据
-    filename = 'csv_for_train/read_1_thread_500.csv'
-    save_model_path = './save/'  # checkpoint存在的目录
+    train_time = 1  # 所有数据的训练轮次
+    train_end = 600  # 训练集截取到的位置140/190,320/386,4200/4537
+    filename = 'csv_for_train/read_diff_disb.csv'
+    save_model_path = './save/read_diff_disb/'  # checkpoint存在的目录
     save_model_name = 'MyModel'    #saver.save(sess, './save/MyModel') 保存模型
 
     f = open(filename)

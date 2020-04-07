@@ -3,13 +3,15 @@
 import os
 import sys
 import threading as td
-from test_server import predict
+from test_server import predict, predict_cpu
 
 
 def main():
     try:
         t1 = td.Thread(target=predict.start_predict, args=())
         t1.start()
+        t2 = td.Thread(target=predict_cpu.start_predict_cpu, args=())
+        t2.start()
     except:
         print("Error: Unable to start thread.")
 

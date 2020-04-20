@@ -3,15 +3,17 @@
 import os
 import sys
 import threading as td
-from test_server import predict, predict_cpu
+from test_server import predict, predict_tikv,predict_tidb
 
 
 def main():
     try:
-        t1 = td.Thread(target=predict.start_predict, args=())
-        t1.start()
-        t2 = td.Thread(target=predict_cpu.start_predict_cpu, args=())
+        #t1 = td.Thread(target=predict.start_predict, args=())
+        #t1.start()
+        t2 = td.Thread(target=predict_tikv.start_predict_cpu, args=())
         t2.start()
+        #t3 = td.Thread(target=predict_tidb.start_predict_cpu, args=())
+        #t3.start()
     except:
         print("Error: Unable to start thread.")
 

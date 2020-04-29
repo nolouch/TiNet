@@ -28,8 +28,6 @@ averageUtilization = 3 #3/8
 
 kk = 0
 history_data =[]
-class tempVar:
-    data = {}
 
 def yaml_to_dict(yaml_path):
     with open(yaml_path, "r") as test_file:
@@ -57,11 +55,11 @@ def fetch_tikv_cpu_usage(prome_addr, start, end, step=30):
     return res['data']['result']
 
 #从Prometheus获取cpu数据,把data整合成一行输入,使用全局变量
-def get_cpu_input(output_size, url, interval):
+def get_cpu_input(output_size, interval, prome_addr):
     global history_data
     sum = 0
 
-    '''
+
     cpu_list = []
     if interval == 0:
         with open('cpu_data/example1.txt', 'r') as f:
@@ -86,7 +84,6 @@ def get_cpu_input(output_size, url, interval):
                 history_data[i][0] += float(ins['values'][i][1])
     '''
 
-    prome_addr = '10.233.18.170:9090'
     step = 60
     end = str(int(time.time()))
 
@@ -103,6 +100,8 @@ def get_cpu_input(output_size, url, interval):
         for i in range(-interval, 0):
             for ins in cpudata:
                 history_data[i][0] += float(ins['values'][i][1])
+    '''
+
 
 #按照time_step生成预测数据,实际中得不到预测的10分钟后的数据
 def get_predict_data(time_step):
@@ -129,8 +128,8 @@ def get_train_data(batch_size,time_step,predict_step):
 
 
 #——————————————————模型—————————————————
-def train_lstm(input_size,output_size,lr,rnn_unit,weights,biases,batch_size,time_step,kp,url,
-               predict_step,save_model_path,save_model_name,init_tikv_replicas,yaml_path):
+def train_lstm(input_size,output_size,lr,rnn_unit,weights,biases,batch_size,time_step,kp,
+               predict_step,save_model_path,save_model_name,init_tikv_replicas,yaml_path, prome_addr,refer_data):
     X=tf.placeholder(tf.float32, shape=[None,time_step,input_size])
     Y=tf.placeholder(tf.float32, shape=[None,output_size])
     keep_prob = tf.placeholder('float')
@@ -162,9 +161,9 @@ def train_lstm(input_size,output_size,lr,rnn_unit,weights,biases,batch_size,time
             else:
                 label += 1
             if label == 1:
-                get_cpu_input(output_size, url, time_step)
+                get_cpu_input(output_size, time_step, prome_addr)
             else:
-                get_cpu_input(output_size, url, 0)
+                get_cpu_input(output_size, 0, prome_addr)
 
             #预测
             maxnum, test_x = get_predict_data(time_step)
@@ -179,7 +178,7 @@ def train_lstm(input_size,output_size,lr,rnn_unit,weights,biases,batch_size,time
                     pre_replicas = maxReplicas
                 if pre_replicas < minReplicas:
                     pre_replicas = minReplicas
-                tempVar.data['tikv_replicas'] = pre_replicas
+                refer_data['recommendedReplicas'] = pre_replicas
                 print("label_cpu:%d, time:%s, predict_step:%d, predict_tikv_cpu_usage:%f, predict_tikv_replicas:%d"
                       % (label, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), predict_step, predict[i], pre_replicas))
                 # 判断是否调度，考虑调度间隔时间等
@@ -216,7 +215,7 @@ def train_lstm(input_size,output_size,lr,rnn_unit,weights,biases,batch_size,time
             time.sleep(60) #每隔60s循环一次，实际上因为程序运行所以超过一分钟
 
 
-def start_predict_cpu():
+def start_predict_cpu(name, namespace, prome_addr, yaml_path):
     input_size = 1  # 输入维度
     output_size = 1  # 输出维度
     rnn_unit = 12 # 隐藏层节点
@@ -225,12 +224,15 @@ def start_predict_cpu():
     time_step = 20  # 前time_step步来预测下一步
     predict_step = 5  #预测predict_step分钟后的负载
     kp = 1  # dropout保留节点的比例
-    tempVar.data = globalvar.get_demo_value()
-    url = 'http://10.233.22.61:2379/pd/api/v1/regions'
     save_model_path = './save/predict_cpu_4-18_60/'  # checkpoint存在的目录
     save_model_name = 'MyModel'  # saver.save(sess, './save/MyModel') 保存模型
+    refer_data = globalvar.get_tikv_replicas()
+    refer_data['name'] = name
+    refer_data['namespace'] = namespace
 
-    yaml_path = '/data2/hust_tmp/cluster/tidb-cluster.yaml' #读配置文件，怎么才不需要设置成绝对路径
+    #prome_addr = '10.233.18.170:9090'  # monitor-prometheus的ip
+    #yaml_path = '/data2/hust_tmp/cluster/tidb-cluster.yaml' #读配置文件
+
     cpurequest, init_tikv_replicas = yaml_to_dict(yaml_path)#读配置的limits，和初始的tikv的replicas
 
 
@@ -250,4 +252,4 @@ def start_predict_cpu():
         'out': tf.Variable(tf.constant(0.1, shape=[output_size, ]))
     }
     train_lstm(input_size,output_size,lr,rnn_unit,weights,biases,batch_size,
-               time_step,kp,url,predict_step,save_model_path,save_model_name,init_tikv_replicas,yaml_path)
+               time_step,kp,predict_step,save_model_path,save_model_name,init_tikv_replicas,yaml_path, prome_addr,refer_data)

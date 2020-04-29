@@ -10,7 +10,7 @@ def main():
     try:
         #t1 = td.Thread(target=predict.start_predict, args=())
         #t1.start()
-        t2 = td.Thread(target=predict_tikv.start_predict_cpu, args=())
+        t2 = td.Thread(target=predict_tikv.start_predict_cpu, args=(sys.argv[-4],sys.argv[-3],sys.argv[-2],sys.argv[-1]))
         t2.start()
         #t3 = td.Thread(target=predict_tidb.start_predict_cpu, args=())
         #t3.start()
@@ -27,7 +27,7 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-    execute_from_command_line(sys.argv)
+    execute_from_command_line(sys.argv[:-4])
 
 
 

@@ -10,6 +10,5 @@ require (
 	github.com/pingcap/tidb v2.0.11+incompatible
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
-	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
-	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/text v0.3.8 // indirect
 )
